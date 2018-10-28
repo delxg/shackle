@@ -91,7 +91,8 @@ number of lines."
   :group 'shackle)
 
 (defcustom shackle-rules nil
-  "Association list of rules what to do with windows.
+  "Either an association list of rules for what to do with
+windows, or a function returning the same.
 Each rule consists of a condition and a property list.  The
 condition can be a symbol, a string or a list of either type.  If
 it's a symbol, match the buffer's major mode.  If it's a string,
@@ -246,13 +247,18 @@ PLIST is returned."
                                 condition))))
       plist)))
 
+(defun shackle--rules ()
+  (if (functionp shackle-rules)
+      (funcall shackle-rules)
+    shackle-rules))
+
 (defun shackle-match (buffer-or-name)
   "Check whether BUFFER-OR-NAME is any rule match.
 Uses `shackle--match' to decide with `shackle-rules' whether
 there is a match, if yes it returns a property list which
 `shackle-display-buffer-condition' and
 `shackle-display-buffer-action' use."
-  (cl-loop for (condition . plist) in shackle-rules
+  (cl-loop for (condition . plist) in (shackle--rules)
            when (shackle--match buffer-or-name condition plist)
            return plist
            finally return shackle-default-rule))
